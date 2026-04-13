@@ -1,6 +1,6 @@
 # PicoTop
 
-PicoTop is a small computer built around the RP2350. It outputs a black and white terminal over HDMI and takes input from a USB keyboard. It runs its own keyboard-only OS with a shell, text editor, and a small set of programs.
+PicoTop is a small computer built around the RP2350. It outputs a black and white terminal over HDMI and takes input from a USB keyboard. It runs its own keyboard-only OS with a shell, text editor, and a small set of programs. "PicoTop" is like laptop, except this one requires you to BYO monitor and keyboard... so not really a laptop at all. I came up with the name before a project pivot.
 
 ## Features
 
