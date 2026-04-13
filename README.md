@@ -11,7 +11,7 @@ PicoTop is a small computer and operating system built around the RP2350. **This
 - **Rechargeable** - onboard LiPo battery with USB-C charging; battery level visible in the top bar
 - **SD card file system** - FAT16 on a micro SD card (FAT16 only; cards must be 2GB or smaller. I have only tested 2GB and 512MB)
 - **RTC** - onboard real-time clock keeps time across power cycles
-- **Exposed Pins** - 10 female headers expose 3V3, GND, I2C, UART, and two GPIO pins
+- **Exposed Pins** - 10 female headers expose 3V3, GND, I2C, UART, two GPIO pins, and SWD (to program the RP2350)
 - **Vault** - A system to encrypt a 'vault' folder in the file system
 
 ## Programs
