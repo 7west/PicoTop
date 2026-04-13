@@ -16,13 +16,20 @@ PicoTop is a small computer built around the RP2350. It outputs a black and whit
 |---|---|
 | `shell` | Command-line interface; entry point for all programs and commands |
 | `uEdit` | Text editor |
-| `calc` | Calculator Workbook |
+| `calc` | Calculator workbook |
 | `hangman` | Hangman game |
 
 ### Shell Commands
 
 `history`, `debug-log`, `timeset`, `battv`, `beep`, `clear`, `ls`, `pwd`, `cd`, `mkdir`, `rmdir`, `rm`, `cp`, `mv`, `sd-format`, `sd-mount`, `sd-unmount`, and GPIO interaction commands. All commands have a `-h` option to describe what they do and how to use them.
 
+## Repo Contents
+
+- HARDWARE/ has the schematics and PCB for the computer and the case .stl files to 3D print the case.
+- SOFTWARE/ has all the code. Open that with VS Code and the Pico SDK plugin and build/upload the "shellwork" project.
+
 ## Notes
 
 This repository is not used for active development, so everything is in one commit. It will be updated again at the next major milestone.
+
+I am not great at coding, so you will probably find a lot of bad practices and bugs, but I am mostly happy with where the project is right now. I used AI to help write a few snippets and also help with the certain architectures, like for the file system and the text editor.
