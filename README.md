@@ -49,3 +49,15 @@ PicoTop in its 3D printed case
 ![Shell program showing a basic shell command](Images/PicoTopScreen.jpg)
 
 Shell program showing the `ls` command. You can see the VAULT/ folder and that all files and folders follow the 8.3 FAT16 naming convention.
+
+![uEdit text editor](Images/PicoTopuEdit.jpg)
+
+uEdit - The simple text editor.
+
+![calc, the calculator workbook program](Images/PicoTopCalc.jpg)
+
+calc - The simple calculator workbook program.
+
+![Just a small hangman game](Images/PicoTopHangman.jpg)
+
+Hangman - so I can say yes to "does it have any games?"
