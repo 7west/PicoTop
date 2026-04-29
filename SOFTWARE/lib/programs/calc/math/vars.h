@@ -1,6 +1,6 @@
 #pragma once
 
-#include "calc_defs.h"
+#include "calc_types.h"
 
 // These are for rad/deg checks performed in eval.c ast_eval()
 // The first 3 functions are trig, so this is 3
@@ -8,8 +8,8 @@
 // The inverse trig functions end at 7, so this is 7
 #define CALC_FUNC_INV_TRIG_FUNCS 7
 
-typedef double (*UnaryFunc)(double);
-typedef double (*BinaryFunc)(double, double);
+typedef double complex (*UnaryFunc)(complex double);
+typedef double complex (*BinaryFunc)(complex double, complex double);
 
 typedef struct {
     char name[VAR_NAME_MAX+1];
@@ -35,11 +35,13 @@ size_t vars_mem_size(void);
 void vars_init(void *mem);
 
 
-bool vars_get(const char *name, double *value);
+bool vars_get(const char *name, double complex *value);
 
-bool vars_set(const char *name, double value);
+bool vars_set(const char *name, double complex value);
 
-void var_set_ans(double value);
+bool vars_remove(const char *name);
+
+void var_set_ans(double complex value);
 
 void var_set_ans_valid(bool valid);
 

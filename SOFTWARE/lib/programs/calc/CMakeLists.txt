@@ -5,6 +5,9 @@ target_sources(calc PRIVATE
     math/eval.c
     math/vars.c
     math/token.c
+    math/adv/command.c
+    math/adv/nsolve.c
+    math/adv/sym.c
     bg/calc_ui.c
     bg/calc_edit.c
     bg/calc_file.c

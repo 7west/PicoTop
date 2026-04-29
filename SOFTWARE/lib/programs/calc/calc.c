@@ -151,7 +151,7 @@ static void calc_local_init(void) {
     //  so this way we actually blank rows we removed chars from
     for (uint16_t i = 0; i < CALC_NUM_CELLS; i++) {
         memset(cmem->cells[i].expr, ' ', CALC_EXPR_TOT_LEN);
-        memset(cmem->cells[i].out_msg, ' ', CALC_OUT_MSG_LEN);
+        memset(cmem->cells[i].result.data.str_out, ' ', CALC_EXPR_LINE_LEN-1);
         cmem->cells_ptrs[i] = &cmem->cells[i];
     }
 }
@@ -312,7 +312,7 @@ static void calc_start_nav_mode(void) {
 // load cells[curr_cell] into temp_cell
 static void load_temp_cell(void) {
     memcpy(&cmem->temp_cell, &cmem->cells[cmem->state.curr_cell], sizeof(calc_cell_t));
-    memset(cmem->temp_cell.out_msg, ' ', CALC_OUT_MSG_LEN); // so the editing cell never shows a result or error
+    memset(cmem->temp_cell.result.data.str_out, ' ', CALC_EXPR_LINE_LEN-1); // so the editing cell never shows a result or error
     cmem->cells_ptrs[cmem->state.curr_cell] = &cmem->temp_cell;
 }
 
@@ -320,10 +320,12 @@ static void load_temp_cell(void) {
 static void write_temp_cell(void) {
     // memcpy(&cmem->cells[cmem->state.curr_cell], &cmem->temp_cell, sizeof(calc_cell_t));
 
+    // copy everything except error message??
     memcpy(&cmem->cells[cmem->state.curr_cell].expr, &cmem->temp_cell.expr, CALC_EXPR_TOT_LEN+1);
     cmem->cells[cmem->state.curr_cell].flags = cmem->temp_cell.flags;
     cmem->cells[cmem->state.curr_cell].len = cmem->temp_cell.len;
-    cmem->cells[cmem->state.curr_cell].result = cmem->temp_cell.result;
+    // cmem->cells[cmem->state.curr_cell].result.data.number = cmem->temp_cell.result.data.number;
+    // memcpy(&cmem->cells[cmem->state.curr_cell].result, &cmem->temp_cell.result, sizeof(calc_result_t));
 
 
     cmem->cells_ptrs[cmem->state.curr_cell] = &cmem->cells[cmem->state.curr_cell];
@@ -418,7 +420,8 @@ static bool cell_was_modified(void) {
 
 static void calc_calculate_all_cells(void) {
 
-    calc_eval_reset_ans();
+    calc_eval_reset_vars();
+    bool error_flag = false;
 
     for (uint16_t i = 0; i < cmem->state.cell_count; i++) {
         // cell is no longer recently modified because we are calculating all cells
@@ -427,16 +430,19 @@ static void calc_calculate_all_cells(void) {
         // skip empty cells
         if (!(cmem->cells[i].flags & CALC_CELL_FLAG_OCCUPIED)) continue;
 
-        if (calc_eval(cmem->cells[i].expr, &cmem->cells[i].result, cmem->cells[i].out_msg, cmem->state.rad_enabled)) {
+        if (calc_eval(cmem->cells[i].expr, &cmem->cells[i].result, cmem->state.rad_enabled)) {
             cmem->cells[i].flags |= CALC_CELL_FLAG_VALID;
 
-            calc_format_double(cmem->cells[i].result, cmem->cells[i].out_msg);
+            calc_format_complex(cmem->cells[i].result.data.number, cmem->cells[i].result.data.str_out);
             // snprintf(cmem->cells[i].out_msg, CALC_ERR_MSG_LEN, "%#.10g", cmem->cells[i].result);
 
         } else {
             cmem->cells[i].flags &= ~(CALC_CELL_FLAG_VALID);
+            error_flag = true;
         }
     }
+
+    calc_ui_error_flag(error_flag);
 }
 
 // for user entering chars
@@ -458,7 +464,7 @@ static void calc_rem_cell(void) {
 
     memset(&cmem->cells[cmem->state.cell_count - 1], 0x00, sizeof(calc_cell_t));
     memset(cmem->cells[cmem->state.cell_count - 1].expr, ' ', CALC_EXPR_TOT_LEN);
-    memset(cmem->cells[cmem->state.cell_count - 1].out_msg, ' ', CALC_OUT_MSG_LEN);
+    memset(cmem->cells[cmem->state.cell_count - 1].result.data.str_out, ' ', CALC_EXPR_LINE_LEN-1);
         
     cmem->state.cell_count -= 1;
     if (cmem->state.curr_cell > cmem->state.cell_count-1) {
@@ -499,7 +505,7 @@ static void calc_add_cell(void) {
 
     cmem->cells[cmem->state.curr_cell + 1].flags = CALC_CELL_FLAG_EXISTS;
     memset(cmem->cells[cmem->state.curr_cell + 1].expr, ' ', CALC_EXPR_TOT_LEN);
-    memset(cmem->cells[cmem->state.curr_cell + 1].out_msg, ' ', CALC_OUT_MSG_LEN);
+    memset(cmem->cells[cmem->state.curr_cell + 1].result.data.str_out, ' ', CALC_EXPR_LINE_LEN-1);
 
     cmem->state.cell_count += 1;
 
@@ -511,7 +517,7 @@ static void calc_add_cell(void) {
 }
 
 
-bool calc_str_eval(const char *input, double *result, char *out_msg) {
+bool calc_str_eval(const char *input, calc_result_t *calc_result) {
 
     uint8_t *prog_mem = (uint8_t *)prog_get_mem();
     size_t offset = 0;
@@ -524,10 +530,10 @@ bool calc_str_eval(const char *input, double *result, char *out_msg) {
 
     cmem = (Calc_Memory *)(prog_mem + offset);
 
-    if (!calc_eval(input, result, out_msg, true)) {
-        printf("error: %s\n", out_msg);
+    if (!calc_eval(input, calc_result, true)) {
+        printf("error: %s\n", calc_result->data.str_out);
     } else {
-        calc_format_double(*result, out_msg);
+        calc_format_complex(calc_result->data.number, calc_result->data.str_out);
     }
 
     memset(prog_mem, 0x00, PROG_MEM_SIZE);

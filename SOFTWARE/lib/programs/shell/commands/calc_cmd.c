@@ -28,12 +28,10 @@ bool cmd_calc(uint8_t argc, const char ** argv, const out_t *out) {
     } 
 
     // 2 args, calculate string
-    char res_str[11];
-    char out_msg[71];
-    double result;
+    calc_result_t calc_result;
 
-    if (calc_str_eval(argv[1], &result, out_msg)) {
-        out->write(out->ctx, out_msg);
+    if (calc_str_eval(argv[1], &calc_result)) {
+        out->write(out->ctx, calc_result.data.str_out);
     }    
     
 

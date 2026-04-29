@@ -270,7 +270,7 @@ bool doc_add_char(uint8_t symbol) {
                 debug_deposit("UEDT-CRIT-adding record at end of Piece Table failed. Table Full!", 0, DBG_NULL_VAR);
                 return false;
             }
-            _doc_shift_rec_down(new_rec, 1);
+            if (!_doc_shift_rec_down(new_rec, 1)) return false;
             
             if (!_doc_fill_new_record(new_rec, symbol)) return false;
 
@@ -401,7 +401,7 @@ static record_offset_t _doc_get_rec_offset(uint32_t pos) {
 bool doc_bksp_char(void) {
     if (core->cursor == 0) return true; // do nothing, not an error
 
-    _doc_rem_char(core->cursor - 1);
+    if (!_doc_rem_char(core->cursor - 1)) return false;
 
     core->cursor -= 1;
 
@@ -409,7 +409,7 @@ bool doc_bksp_char(void) {
     vp_calc_all_rows();
     vp_render_rows();
     vp_render_vcursor();
-    
+    return true;
 }
 
 bool doc_del_char(void) {
@@ -420,6 +420,7 @@ bool doc_del_char(void) {
     vp_calc_all_rows();
     vp_render_rows();
     vp_render_vcursor();
+    return true;
 }
 
 static bool _doc_rem_char(uint32_t pos) {
@@ -447,7 +448,7 @@ static bool _doc_rem_char(uint32_t pos) {
 
         // printf("rem char @ Middle of record\n");
 
-        _doc_split_record_rem(ro.record, ro.offset);
+        if(!_doc_split_record_rem(ro.record, ro.offset)) return false;
         core->file_size -= 1;
         
     } else if (ro.offset == ptable[ro.record].len - 1) { // End of record

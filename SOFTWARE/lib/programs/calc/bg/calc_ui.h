@@ -21,6 +21,8 @@ void calc_remove_cursor(void);
 //  it will print hex and bin versions of the integer
 void calc_format_double(double result, char *out_msg);
 
+void calc_format_complex(double complex result, char *out_msg);
+
 // draws shortcuts, rad/deg, NAV/HELP/EDIT markers, cell count on bottom UI bar
 void calc_bottom_ui_update(calc_mode_t mode, uint16_t cell_count, bool rad_mode);
 
@@ -42,3 +44,5 @@ void calc_save_add_char(uint8_t idx, char sym);
 void calc_save_output(const char *status);
 
 void calc_load_prompt(void);
+
+void calc_ui_error_flag(bool error_flag);

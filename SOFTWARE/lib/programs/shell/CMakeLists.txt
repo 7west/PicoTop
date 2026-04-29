@@ -20,6 +20,8 @@ target_sources(shell PRIVATE
     commands/vault_cmds.c
     commands/calc_cmd.c
     commands/hangman_cmd.c
+    commands/ptable_cmd.c
+    commands/i2c_tool.c
 )
 
 target_include_directories(shell PUBLIC ${CMAKE_CURRENT_LIST_DIR})
@@ -27,6 +29,7 @@ target_include_directories(shell PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(shell PUBLIC 
     terminal 
     pico_stdlib 
+    hardware_i2c
     os_debug
     prog
     rtc
@@ -40,4 +43,5 @@ target_link_libraries(shell PUBLIC
     vault
     calc
     hangman
+    ptable
 )

@@ -12,6 +12,7 @@ static const char info_doc_string[] =
 "shell - runs at startup, launches all other commands and programs\n"
 "uEdit - basic text editor\n"
 "calc - calculator workbook\n"
-"hangman - Fun little hangman game";
+"hangman - Fun little hangman game\n"
+"ptable - Periodic Table of Elements";
 
 #define INFO_DOC_LEN (sizeof(info_doc_string) - 1)

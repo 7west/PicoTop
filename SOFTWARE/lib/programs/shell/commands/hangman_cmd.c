@@ -5,7 +5,7 @@
 
 
 bool cmd_hangman_help(const out_t *out) {
-    out->write(out->ctx, " ");
+    out->write(out->ctx, "Fun little hangman game. Guess from the top 1000 used English words >= 5 letters");
     return true;
 }
 

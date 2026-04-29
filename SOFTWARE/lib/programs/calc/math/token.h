@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ast.h"
+#include "calc_types.h"
 
 typedef enum { // identifiers
     TOKEN_NULL = 0,
@@ -40,4 +41,6 @@ bool tokenizer_init(Tokenizer *t, const char *input);
 
 calc_return_t tokenizer_next(Tokenizer *t, Token *out);
 
+bool parse_num(const char *str, size_t *consumed, double *value);
 
+bool parse_name(const char *str, size_t *consumed, char *name_buf);

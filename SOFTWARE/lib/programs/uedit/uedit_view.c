@@ -407,6 +407,7 @@ static void _vp_scroll_down(void) {
     if (!rows[last_valid_row].valid) return;
     if (1 > last_valid_row) return;
     if (!rows[1].valid) return;
+    if (last_valid_row < UEDIT_NUM_TEXT_ROWS - 1) return;
 
     core->vp_top_doc = rows[1].doc_pos_start;
 
@@ -588,6 +589,13 @@ static uint32_t _vp_calc_row_from_doc(vp_row_t *r, uint32_t start_doc_pos) {
     //     r->cells[TERM_NUM_COLS] = 0x00;
     //     return 0;
     // }
+
+    if (to_read == 0) {
+        if (core->file_size == 0) return 0;
+        uint8_t last;
+        if (!doc_read_file(core->file_size - 1, &last, 1)) return 0;
+        if (last != '\n') return 0;
+    }
     
     if (to_read > 0) {
         if (!doc_read_file(start_doc_pos, vp_cache, to_read)) {
@@ -690,7 +698,7 @@ void vp_cursor_pgup(void) {
     
     for (uint8_t i = 0; i < VP_PAGE_LINES; i++) {
 
-        if (vcursorx == UEDIT_NUM_TEXT_ROWS-1) {
+        if (vcursory == UEDIT_NUM_TEXT_ROWS-1) {
             vp_cursor_up();
             _vp_scroll_up();
         } else {

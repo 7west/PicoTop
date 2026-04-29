@@ -72,7 +72,7 @@ bool calc_save_file(calc_cell_t *cells, calc_state_t state) {
         if (cells[i].flags & CALC_CELL_FLAG_OCCUPIED) {
             vfs_write(fd, cells[i].expr, cells[i].len);
             vfs_write(fd, "\n=", 2);
-            vfs_write(fd, cells[i].out_msg, strlen(cells[i].out_msg));
+            vfs_write(fd, cells[i].result.data.str_out, strlen(cells[i].result.data.str_out));
             vfs_write(fd, "\n", 1);
         }
 

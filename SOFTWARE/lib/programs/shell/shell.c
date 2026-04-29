@@ -66,6 +66,8 @@ static const shell_cmd_t cmds[] = {
     {"vault-decrypt", cmd_vault_decrypt},
     {"calc", cmd_calc},
     {"hangman", cmd_hangman},
+    {"ptable", cmd_ptable},
+    {"i2ct", cmd_i2c_tool},
 
 
 

@@ -20,7 +20,7 @@
 // VARIABLE TYPES:
 
 typedef struct {
-    double value;
+    double complex value;
     char name[VAR_NAME_MAX+1];
     uint8_t flags;
 } VarEntry;
@@ -51,38 +51,45 @@ static const VarEntry sys_vars[] = {
     {.name = "ans", .value = 0.0, .flags = VAR_FLAG_SYS | VAR_FLAG_USED | VAR_FLAG_VALID},
     {.name = "pi", .value = M_PI, .flags = VAR_FLAG_SYS | VAR_FLAG_USED | VAR_FLAG_VALID},
     {.name = "e", .value = M_E, .flags = VAR_FLAG_SYS | VAR_FLAG_USED | VAR_FLAG_VALID},
+    {.name = "i", .value= 0.0 + 1.0*I, .flags = VAR_FLAG_SYS | VAR_FLAG_USED | VAR_FLAG_VALID},
 };
 
-static bool double_to_int64(double val, int64_t *out);
-static double ln_safe(double val);
-static double sqrt_safe(double val);
-static double acos_safe(double val);
-static double asin_safe(double val);
-static double log10_safe(double val);
-static double log2_safe(double val);
-static double fact_safe(double val);
-static double gcd(double a, double b);
-static double lcm(double a, double b);
+static bool double_to_int64(double complex val, int64_t *out);
+// static double ln_safe(double val);
+// static double sqrt_safe(double val);
+// static double acos_safe(double val);
+// static double asin_safe(double val);
+static double complex log10_safe(double complex val);
+static double complex log2_safe(double complex val);
+static double complex fact_safe(double complex val);
+static double complex gcd(double complex a, double complex b);
+static double complex lcm(double complex a, double complex b);
+static double complex atan2_safe(double complex a, double complex b);
+static double complex cabs_safe(double complex val);
+static double complex round_safe(double complex val);
+// WAY too complicated to implement with complex numbers
+//  maybe one day...
+// static double complex tgamma_safe(double complex val); 
 
 // Warning: if you change the placement or number of trig or inv trig functions
 //  you MUST change the #define's in vars.h!
 static const FuncEntry sys_funcs[] = {
-    {.name = "sin", .arg_count = 1, .func.unary = sin},
-    {.name = "cos", .arg_count = 1, .func.unary = cos},
-    {.name = "tan", .arg_count = 1, .func.unary = tan},
-    {.name = "asin", .arg_count = 1, .func.unary = asin_safe},
-    {.name = "acos", .arg_count = 1, .func.unary = acos_safe},
-    {.name = "atan", .arg_count = 1, .func.unary = atan},
-    {.name = "atan2", .arg_count = 2, .func.binary = atan2},
-    {.name = "ln", .arg_count = 1, .func.unary = ln_safe},
+    {.name = "sin", .arg_count = 1, .func.unary = csin},
+    {.name = "cos", .arg_count = 1, .func.unary = ccos},
+    {.name = "tan", .arg_count = 1, .func.unary = ctan},
+    {.name = "asin", .arg_count = 1, .func.unary = casin},
+    {.name = "acos", .arg_count = 1, .func.unary = cacos},
+    {.name = "atan", .arg_count = 1, .func.unary = catan},
+    {.name = "atan2", .arg_count = 2, .func.binary = atan2_safe},
+    {.name = "ln", .arg_count = 1, .func.unary = clog},
     {.name = "log10", .arg_count = 1, .func.unary = log10_safe},
     {.name = "log2", .arg_count = 1, .func.unary = log2_safe},
-    {.name = "sqrt", .arg_count = 1, .func.unary = sqrt_safe},
-    {.name = "round", .arg_count = 1, .func.unary = round},
-    {.name = "exp", .arg_count = 1, .func.unary = exp},
-    {.name = "abs", .arg_count = 1, .func.unary = fabs},
+    {.name = "sqrt", .arg_count = 1, .func.unary = csqrt},
+    {.name = "round", .arg_count = 1, .func.unary = round_safe},
+    {.name = "exp", .arg_count = 1, .func.unary = cexp},
+    {.name = "abs", .arg_count = 1, .func.unary = cabs_safe},
     {.name = "fact", .arg_count = 1, .func.unary = fact_safe},
-    {.name = "tgamma", .arg_count = 1, .func.unary = tgamma},
+    // {.name = "tgamma", .arg_count = 1, .func.unary = tgamma_safe},
     {.name = "gcd", .arg_count = 2, .func.binary = gcd},
     {.name = "lcm", .arg_count = 2, .func.binary = lcm},
 
@@ -111,13 +118,13 @@ void vars_init(void *mem) {
 
 // returns false if variable does not exist or if cell tries to use an invalid ans variable
 //      this is kind of common and is fine, user should be notified
-bool vars_get(const char *name, double *value) {
+bool vars_get(const char *name, double complex *value) {
     // uint8_t var_flag = VAR_FLAG_USED;
     uint8_t var_idx = 0;
 
     while (var_idx < vmem->vt.count) {
         if (strncmp(name, vmem->vt.entries[var_idx].name, VAR_NAME_MAX) == 0) {
-            if (vmem->vt.entries[var_idx].flags | VAR_FLAG_VALID) {
+            if (vmem->vt.entries[var_idx].flags & VAR_FLAG_VALID) {
                 *value = vmem->vt.entries[var_idx].value;
                 return true;
             } else { // variable is invalid. mostly reserved for "ans" usage
@@ -131,9 +138,10 @@ bool vars_get(const char *name, double *value) {
 }
 
 // can set non-system variables
-bool vars_set(const char *name, double value) {
+bool vars_set(const char *name, double complex value) {
     uint8_t var_idx = 0;
 
+    // first check if var name already exists
     while (var_idx < vmem->vt.count) {
         if (strncmp(name, vmem->vt.entries[var_idx].name, VAR_NAME_MAX) == 0) {
 
@@ -146,6 +154,7 @@ bool vars_set(const char *name, double value) {
         var_idx += 1;
     }
 
+    // if not, make a new variable
     strncpy(vmem->vt.entries[var_idx].name, name, VAR_NAME_MAX);
     vmem->vt.entries[var_idx].value = value;
     vmem->vt.entries[var_idx].flags = VAR_FLAG_USED | VAR_FLAG_VALID;
@@ -154,7 +163,31 @@ bool vars_set(const char *name, double value) {
     return true;
 }
 
-void var_set_ans(double value) {
+bool vars_remove(const char *name) {
+    uint8_t var_idx = 0;
+
+    while (var_idx < vmem->vt.count) {
+        if (strncmp(name, vmem->vt.entries[var_idx].name, VAR_NAME_MAX) == 0) {
+
+            // system variables cannot be removed
+            if (vmem->vt.entries[var_idx].flags & VAR_FLAG_SYS) return false;
+
+            break;
+        }
+        var_idx += 1;
+    }
+    // never found the variable
+    if (var_idx == vmem->vt.count) return false;
+
+    memmove(vmem->vt.entries + var_idx, vmem->vt.entries + var_idx + 1, 
+            (vmem->vt.count - var_idx - 1) * sizeof(VarEntry));
+    memset(vmem->vt.entries + vmem->vt.count - 1, 0x00, sizeof(VarEntry));
+    
+    vmem->vt.count -= 1;
+    return true;
+} 
+
+void var_set_ans(double complex value) {
     vmem->vt.entries[VAR_ANS_INDEX].value = value;
 }
 
@@ -180,6 +213,8 @@ bool vars_clear_user(void) {
             memset(&vmem->vt.entries[i], 0x00, sizeof(VarEntry));
         }
     }
+    
+    vmem->vt.count = sizeof(sys_vars) / sizeof(sys_vars[0]);
 
     return true;
 }
@@ -215,73 +250,84 @@ void funcs_clear_error(void) {
 }
 
 // CUSTOM FUNCTIONS for safety
-static double ln_safe(double val) {
-    if (val <= 0.0) {
-        ERR_SEND(vmem->func_err_msg, "LN DOMAIN ERROR");
-        return NAN;
-    }
-    return log(val);
+// static double ln_safe(double val) {
+//     if (val <= 0.0) {
+//         ERR_SEND(vmem->func_err_msg, "LN DOMAIN ERROR");
+//         return NAN;
+//     }
+//     return log(val);
+// }
+
+// static double sqrt_safe(double val) {
+//     if (val < 0.0) {
+//         ERR_SEND(vmem->func_err_msg, "SQRT DOMAIN ERROR");
+//         return NAN;
+//     }
+//     return sqrt(val);
+// }
+
+// static double acos_safe(double val) {
+//     if (val < -1.0 || val > 1.0) {
+//         ERR_SEND(vmem->func_err_msg, "ACOS DOMAIN ERROR");
+//         return NAN;
+//     }
+//     return acos(val);
+// }
+
+// static double asin_safe(double val) {
+//     if (val < -1.0 || val > 1.0) {
+//         ERR_SEND(vmem->func_err_msg, "ASIN DOMAIN ERROR");
+//         return NAN;
+//     }
+//     return asin(val);
+// }
+
+static double complex atan2_safe(double complex a, double complex b) {
+    if (fabs(cimag(a)) >= 1e-9 || fabs(cimag(b)) >= 1e-9) return CALC_COMPLEX_TO_INT_ERROR;
+    return CMPLX(atan2(creal(a), creal(b)), 0.0);
 }
 
-static double sqrt_safe(double val) {
-    if (val < 0.0) {
-        ERR_SEND(vmem->func_err_msg, "SQRT DOMAIN ERROR");
-        return NAN;
-    }
-    return sqrt(val);
+static double complex log10_safe(double complex val) {
+
+    return clog(val) / log(10);
 }
 
-static double acos_safe(double val) {
-    if (val < -1.0 || val > 1.0) {
-        ERR_SEND(vmem->func_err_msg, "ACOS DOMAIN ERROR");
-        return NAN;
-    }
-    return acos(val);
+static double complex log2_safe(double complex val) {
+
+    return clog(val) / log(2);
 }
 
-static double asin_safe(double val) {
-    if (val < -1.0 || val > 1.0) {
-        ERR_SEND(vmem->func_err_msg, "ASIN DOMAIN ERROR");
-        return NAN;
-    }
-    return asin(val);
-}
-
-static double log10_safe(double val) {
-    if (val <= 0.0) {
-        ERR_SEND(vmem->func_err_msg, "LOG10 DOMAIN ERROR");
-        return NAN;
-    }
-    return log10(val);
-}
-
-static double log2_safe(double val) {
-    if (val <= 0.0) {
-        ERR_SEND(vmem->func_err_msg, "LOG2 DOMAIN ERROR");
-        return NAN;
-    }
-    return log2(val);
-}
-
-static bool double_to_int64(double val, int64_t *out) {
-    double mag = fabs(val);
+static bool double_to_int64(double complex val, int64_t *out) {
+    double mag = cabs(val);
 
     double epsilon = (mag > 1.0 ? mag : 1.0) * 1e-9;
     // not an integer:
-    if (fabs(val - round(val)) > epsilon) return false;
+    if (cabs(val - round(creal(val))) > epsilon) return false;
 
     // too big to put in int64
     if (mag > (double)(1LL << 53)) return false;
 
-    *out = (int64_t)round(val);
+    *out = (int64_t)round(creal(val));
     return true;
 }
+
+static double complex cabs_safe(double complex val) {
+    return CMPLX(cabs(val), 0.0);
+}
+
+static double complex round_safe(double complex val) {
+    return round(creal(val)) + round(cimag(val)) * I;
+}
+
+// static double complex tgamma_safe(double complex val) {
+
+// }
 
 
 
 #define FACT_TABLE_SIZE 170 // see fact_table[] below
 
-static double fact_safe(double val) {
+static double complex fact_safe(double complex val) {
     int64_t n;
     if (!double_to_int64(val, &n) || n < 0) {
         ERR_SEND(vmem->func_err_msg, "NON INTEGER ERROR");
@@ -290,10 +336,10 @@ static double fact_safe(double val) {
 
     if (n > FACT_TABLE_SIZE) return (double)INFINITY;
 
-    return fact_table[n];
+    return CMPLX(fact_table[n], 0.0);
 }
 
-static double gcd(double a, double b) {
+static double complex gcd(double complex a, double complex b) {
     int64_t x, y;
 
     if (!double_to_int64(a, &x) || !double_to_int64(b, &y)) {
@@ -309,10 +355,10 @@ static double gcd(double a, double b) {
         y = x % y;
         x = t;
     }
-    return (double)x;    
+    return CMPLX( (double)x, 0.0);    
 }
 
-static double lcm(double a, double b) {
+static double complex lcm(double complex a, double complex b) {
     int64_t x, y;
 
     if (!double_to_int64(a, &x) || !double_to_int64(b, &y)) {
@@ -331,7 +377,7 @@ static double lcm(double a, double b) {
         x = t;
     }
     
-    return (double)(abs_a / x) * (double)abs_b;
+    return CMPLX((double)(abs_a / x) * (double)abs_b, 0.0);
 }
 
 static const double fact_table[] = {

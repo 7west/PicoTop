@@ -61,6 +61,7 @@ add_subdirectory(lib/programs/shell)
 add_subdirectory(lib/programs/uedit)
 add_subdirectory(lib/programs/calc)
 add_subdirectory(lib/programs/hangman)
+add_subdirectory(lib/programs/ptable)
 add_subdirectory(lib/core/prog)
 add_subdirectory(lib/core/crypto)
 
@@ -138,6 +139,8 @@ add_executable(shellwork
 target_include_directories(shellwork PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src/shellwork
 )
+
+target_compile_definitions(shellwork PRIVATE PICO_STACK_SIZE=0xC00) # 3kB
 
 pico_enable_stdio_uart(shellwork 1)
 pico_enable_stdio_usb(shellwork 0)

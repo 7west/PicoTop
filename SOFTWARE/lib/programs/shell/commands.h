@@ -45,6 +45,9 @@ bool cmd_test(uint8_t argc, const char ** argv, const out_t *out);
 // gpio.c
 bool cmd_gpio(uint8_t argc, const char ** argv, const out_t *out);
 
+// i2c_tool.c
+bool cmd_i2c_tool(uint8_t argc, const char ** argv, const out_t *out);
+
 // car-rem.c
 bool cmd_car_kill(uint8_t argc, const char ** argv, const out_t *out);
 
@@ -71,6 +74,9 @@ bool cmd_calc(uint8_t argc, const char ** argv, const out_t *out);
 
 // hangman_cmd.c
 bool cmd_hangman(uint8_t argc, const char ** argv, const out_t *out);
+
+// ptable_cmd.c
+bool cmd_ptable(uint8_t argc, const char ** argv, const out_t *out);
 
 // beep.c
 bool cmd_beep(uint8_t argc, const char ** argv, const out_t *out);

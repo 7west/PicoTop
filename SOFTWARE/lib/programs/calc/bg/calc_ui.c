@@ -13,7 +13,7 @@ static void print_uint16(char *out, uint16_t val);
 // draws the inverted chars to show which cell is selected
 // static void calc_ui_select_cell(uint16_t top_ui_cell, uint16_t curr_cell);
 
-
+static bool calc_format_real_part(double val, char *buf, size_t bufsize);
 
 
 
@@ -61,7 +61,7 @@ void calc_draw_one_cell(uint8_t pos, const calc_cell_t *cell, uint8_t cell_idx, 
     // write result/error message
     term_clear_line(y + 2);
     term_draw_char(6, y + 2, '=');
-    term_draw_string(7, y + 2, cell->out_msg);
+    term_draw_string(7, y + 2, cell->result.data.str_out);
     term_draw_string(0, y + 3, "------------------------------------------------------------------------------------------");
 
     if (selected) {
@@ -118,6 +118,89 @@ void calc_wipe_ui_symbols(void) {
         term_draw_string(0, 1 + (i * 4), "     ");
     }
 
+}
+
+static bool calc_format_real_part(double val, char *buf, size_t bufsize) {
+    double mag = fabs(val);
+    double epsilon = (mag > 1.0 ? mag : 1.0) * 1e-9;
+
+    if (fabs(val - round(val)) <= epsilon) {
+        if (mag < 1e18) {
+            snprintf(buf, bufsize, "%lld", (long long)val);
+        } else {
+            snprintf(buf, bufsize, "%.6e", val);
+        }
+        return true;
+    } else {
+        snprintf(buf, bufsize, "%.13g", val);
+
+        // strip trailing zeros after decimal point
+        // necessary because %g isn't behaving like C should due to Pico SDK
+        char *dot = strchr(buf, '.');
+        if (dot) {
+            char *end = buf + strlen(buf) - 1;
+            while (end > dot && *end == '0') {
+                end--;
+            }
+            if (end == dot) {
+                *end = '\0';
+            } else {
+                *(end + 1) = '\0';
+            }
+        }
+        return false;
+    }
+}
+
+void calc_format_complex(double complex result, char *out_msg) {
+    double re = creal(result);
+    double im = cimag(result);
+    double mag = cabs(result);
+    double epsilon = (mag > 1.0 ? mag : 1.0) * 1e-9;
+
+    if (fabs(im) <= epsilon) {
+        // no imagimary part
+        bool is_int = calc_format_real_part(re, out_msg, CALC_ERR_MSG_LEN);
+        double rmag = fabs(re);
+
+        if (is_int && rmag <= (double)UINT32_MAX) {
+            uint8_t len = strlen(out_msg);
+            uint32_t uval = (re < 0) ? (uint32_t)(int32_t)re : (uint32_t)re;
+            snprintf(out_msg + len, CALC_OUT_MSG_LEN - len, "   0x%X", uval);
+
+            if (rmag <= 0xFFFF && uval > 0) {
+                len = strlen(out_msg);
+                char *p = out_msg + len;
+                *p++ = ' '; *p++ = ' '; *p++ = ' ';
+                *p++ = '0'; *p++ = 'b';
+                int8_t top = 15;
+                while (top > 0 && !((uval >> top) & 1)) {
+                    top--;
+                }
+                for (int8_t i = top; i >= 0; i--) {
+                    *p++ = (uval >> i) & 1 ? '1' : '0';
+                }
+                *p = '\0';
+            }
+        }
+    } else if (fabs(re) <= epsilon) {
+        // Pure imaginary: "bi"
+        calc_format_real_part(im, out_msg, CALC_ERR_MSG_LEN - 1);
+        size_t len = strlen(out_msg);
+        out_msg[len] = 'i';
+        out_msg[len + 1] = '\0';
+    } else {
+        // Complex: "a+bi" or "a-bi"
+        calc_format_real_part(re, out_msg, CALC_ERR_MSG_LEN);
+        size_t len = strlen(out_msg);
+        out_msg[len++] = (im < 0) ? '-' : '+';
+        // -1 reserves space for the trailing 'i'; snprintf's own null
+        // gets overwritten when we append 'i' below.
+        calc_format_real_part(fabs(im), out_msg + len, CALC_ERR_MSG_LEN - len - 1);
+        len += strlen(out_msg + len);
+        out_msg[len]     = 'i';
+        out_msg[len + 1] = '\0';
+    }
 }
 
 void calc_format_double(double result, char *out_msg) {
@@ -204,6 +287,15 @@ void calc_bottom_ui_update(calc_mode_t mode, uint16_t cell_count, bool rad_mode)
     calc_update_cell_count(cell_count);
 }
 
+// sets error flag on screen if any cell has had an error calculating
+void calc_ui_error_flag(bool error_flag) {
+    if (error_flag) {
+        term_draw_char_inv(66, TERM_NUM_ROWS-1, 'E');
+    } else {
+        term_draw_char_inv(66, TERM_NUM_ROWS-1, ' ');
+    }
+}
+
 // magic number based on the prompt written below
 #define SAVE_PROMPT_LEN 47
 
@@ -261,3 +353,4 @@ void calc_draw_help_ui(void) {
         term_draw_char_inv(i, TERM_NUM_ROWS-1, ' ');
     }
 }
+

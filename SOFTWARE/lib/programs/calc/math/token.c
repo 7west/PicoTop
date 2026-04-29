@@ -11,7 +11,6 @@
 
 // Static Functions:
 
-static bool parse_num(const char *str, size_t *consumed, double *value);
 static bool parse_num_hex(const char *str, size_t *consumed, double *value);
 static bool parse_num_bin(const char *str, size_t *consumed, double *value);
 static bool parse_sci_notation(const char *str, size_t *consumed, double *value);
@@ -20,7 +19,6 @@ static bool is_hex_digit(const char c);
 static bool is_bin_digit(const char c);
 static uint8_t hex_to_dec(const char c);
 
-static bool parse_name(const char *str, size_t *consumed, char *name_buf);
 static bool is_alphabetic(const char c);
 static void lowercase_buf(char *buf, uint8_t len);
 
@@ -149,7 +147,7 @@ calc_return_t tokenizer_next(Tokenizer *t, Token *out) {
 }
 
 // str + consumed always equals the char after the number
-static bool parse_num(const char *str, size_t *consumed, double *value) {
+bool parse_num(const char *str, size_t *consumed, double *value) {
 
     if (str == NULL) return false;
     if (consumed == NULL) return false;
@@ -336,11 +334,16 @@ static uint8_t hex_to_dec(const char c) {
         return (safe_c - 'A') + 10;
     }
 }
+/*
+Several notes:
+1. We have a similar function to parse_num called: bool parse_name(const char *str, size_t *consumed, char *name_buf) which we should use instead of writing a whole new "find_variable_name()"
+2. The consumed is the number of characters consumed by the num or name. You drop it on the floor, probably because you already calculated the commas, so you don't need it, right?
+3. The return value SHOULD NOT be true and then a NULL pointer if there is a failure. Just return false if there is a failure and true if there is a success. FIX THIS! That weird return value was good when we were only parsing "let" and didn't have parsed_cmd_t to help
+4. The "let" parsing should really sit in the same tree as the other ones if possible (I know that may be impossible due to its variable name at the beginning, so don't do it if it is impossible)
 
+*/
 
-
-
-static bool parse_name(const char *str, size_t *consumed, char *name_buf) {
+bool parse_name(const char *str, size_t *consumed, char *name_buf) {
     
     if (str == NULL) return false;
     if (consumed == NULL) return false;
