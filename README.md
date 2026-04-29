@@ -22,10 +22,11 @@ PicoTop is a small computer and operating system built around the RP2350. **This
 | `uEdit` | Text editor |
 | `calc` | Calculator workbook |
 | `hangman` | Hangman game |
+| `ptable` | Periodic Table of Elements reference |
 
 ### Shell Commands
 
-`history`, `debug-log`, `timeset`, `battv`, `beep`, `clear`, `ls`, `pwd`, `cd`, `mkdir`, `rmdir`, `rm`, `cp`, `mv`, `sd-format`, `sd-mount`, `sd-unmount`, and GPIO interaction commands. All commands have a `-h` option to describe what they do and how to use them.
+`history`, `debug-log`, `timeset`, `battv`, `i2ct`, `beep`, `clear`, `ls`, `pwd`, `cd`, `mkdir`, `rmdir`, `rm`, `cp`, `mv`, `sd-format`, `sd-mount`, `sd-unmount`, and GPIO interaction commands. All commands have a `-h` option to describe what they do and how to use them.
 
 ## Repo Contents
 
