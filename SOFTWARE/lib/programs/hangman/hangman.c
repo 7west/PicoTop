@@ -26,6 +26,7 @@
 typedef struct {
     char the_word[MAX_WORD_LEN + 1];
     char wrong_letters[26+1];
+    char correct_letters[26+1];
     uint8_t word_len;
     uint8_t mistakes;
     uint8_t num_correct_letters;
@@ -116,6 +117,8 @@ static void hangman_take_key(char sym) {
     // capitalize any lowercase letters
     if (sym >= 'a' && sym <= 'z') sym -= 32;
 
+    if (strchr(mem->correct_letters, sym)) return;
+
     bool letter_found = false;
     for (uint8_t i = 0; i < mem->word_len; i++) {
 
@@ -128,7 +131,10 @@ static void hangman_take_key(char sym) {
         }
     }
 
-    if (!letter_found && (!strchr(mem->wrong_letters, sym))) {
+    if (letter_found) {
+        mem->correct_letters[strlen(mem->correct_letters)] = sym;
+
+    } else if (!letter_found && (!strchr(mem->wrong_letters, sym))) {
         hangman_add_wrong_letter(sym);
     }
 

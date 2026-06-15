@@ -6,7 +6,7 @@
 #include "vars.h"
 
 
-
+#define printf(...) ((void)0)
 
 
 // Static Functions:

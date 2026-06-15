@@ -11,6 +11,8 @@
 #include "adv/command.h"
 #include "adv/nsolve.h"
 
+#define printf(...) ((void)0)
+
 #define EVAL_MAX_DEPTH 20
 #define ERR_SEND(dst, lit) do {                         \
     _Static_assert(sizeof(lit) <= CALC_ERR_MSG_LEN + 1, \
@@ -93,7 +95,7 @@ bool calc_eval(const char *input, calc_result_t *calc_result, bool rad_mode) {
 
     emem->rad_mode = rad_mode;
     calc_result->mode = CALC_RESULT_ERR;
-    memcpy(emem->input_expr, input, CALC_EXPR_TOT_LEN);
+    memcpy(emem->input_expr, input, CALC_EXPR_TOT_LEN+1);
 
     printf("detecting commands\n");
     if (!command_parse(emem->input_expr, &emem->parsed_cmd)) {

@@ -30,7 +30,7 @@ bool command_parse(char *input, parsed_cmd_t *cmd) {
     cmd->type = CMD_TYPE_EXPR;
     const char *after_prefix = input;
 
-    for (int i = 0; i < 5; i++) {
+    for (uint8_t i = 0; i < (uint8_t)(sizeof(prefixes)/sizeof(prefixes[0])); i++) {
         size_t plen = strlen(prefixes[i].prefix);
         if (strncmp(input, prefixes[i].prefix, plen) == 0) {
             cmd->type = prefixes[i].type;

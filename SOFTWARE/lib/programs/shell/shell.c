@@ -350,6 +350,8 @@ static bool _shell_cmd_help(uint8_t argc) {
             if (cmds[cmd_table_idx].name != NULL) _shell_write(NULL, ", ");
         }
 
+        _shell_write(NULL, "\n\nINFO.TXT also has some introductory information");
+
         return true;
     }
 
